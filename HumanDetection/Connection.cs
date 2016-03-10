@@ -25,35 +25,46 @@ namespace HumanDetection
 {
     class Connection
     {
-        private BasicDeliverEventArgs global = new BasicDeliverEventArgs();
+        private static BasicDeliverEventArgs global = new BasicDeliverEventArgs();
+        private static BasicDeliverEventArgs globalBawah = new BasicDeliverEventArgs();
        
-        QueueingBasicConsumer consumer;
+        public static QueueingBasicConsumer consumer, consumerBawah;
         static Stopwatch s = new Stopwatch();
         static string ip = "167.205.66.76";
         //static string ip = "127.0.0.1";
         static int port = 9559;
         public bool isConnected = false;
-        public IModel channelSend, channelData;
+        public static IModel channelSend, channelSendBawah, channelData, channelDataBawah;
         private IModel channelVisual1, channelVisual2, channelVisual3, channelAudio1, channelAudio2, channelAudio3, channelAvatar1, channelAvatar3;
         public EventingBasicConsumer consumerVisual1, consumerVisual2, consumerVisual3, consumerAudio1, consumerAudio2, consumerAudio3, consumerAvatar1, consumerAvatar2;
-        public QueueingBasicConsumer consumerData;
-        public IConnection connection;
+        public static QueueingBasicConsumer consumerData;
+        public static IConnection connection;
+        public static IConnection connectionBawah;
         Connection connection2;
         public QueueingBasicConsumer  consumerFaceLocation, consumerDataJoint; // buat ack command
         public bool isAck = false;
         public string ackRoutingKey;
         public string corrId;
         TextName2 textName2;
+        public Rectangle boundAtas, boundBawah;
+        public static ConnectionFactory factory;
+        public static ConnectionFactory factoryBawah;
 
         public bool isCollecting = false;
 
         public Connection()
         {
+            topCamera();
+            bottomCamera();
+        }
+
+        public static void topCamera()
+        {
             try
             {
-                ConnectionFactory factory = new ConnectionFactory();
-                factory.Uri = "amqp://lumen:lumen@167.205.66.79/%2F";
-                IConnection connection = factory.CreateConnection();
+                factory = new ConnectionFactory();
+                factory.Uri = "amqp://lumen:lumen@167.205.66.35/%2F";
+                connection = factory.CreateConnection();
                 IModel channel = connection.CreateModel();
                 channelSend = connection.CreateModel();
                 channelData = connection.CreateModel();
@@ -62,20 +73,57 @@ namespace HumanDetection
                 {
                     {"x-message-ttl",50}
                 };
-                QueueDeclareOk queue = channel.QueueDeclare("", true, false, true, arg);
+                QueueDeclareOk queue = channel.QueueDeclare("", false, true, true, arg); // Durable untuk mengehentikan pengiriman data ke server saat aplikasi kita di matikan
                 channel.QueueBind(queue.QueueName, "amq.topic", routingKey);
                 consumer = new QueueingBasicConsumer(channel);
                 channel.BasicConsume(queue.QueueName, true, consumer);
                 Thread Query = new Thread(QueryImage);
                 Query.Start();
 
-                QueueDeclareOk queueData = channelData.QueueDeclare("", true, false, true, null);
-                channelData.QueueBind(queueData.QueueName, "amq.topic", "lumen.visual.get.text");
-                consumerData = new QueueingBasicConsumer(channelData);
-                channelData.BasicConsume(queueData.QueueName, true, consumerData);
-                Thread data = new Thread(QueryData);
-                data.Start();
-                Console.WriteLine("Setting Selesai");
+                //QueueDeclareOk queueData = channelData.QueueDeclare("", true, false, true, null);
+                //channelData.QueueBind(queueData.QueueName, "amq.topic", "lumen.visual.get.text");
+                //consumerData = new QueueingBasicConsumer(channelData);
+                //channelData.BasicConsume(queueData.QueueName, true, consumerData);
+                //Thread data = new Thread(QueryData);
+                //data.Start();
+                //Console.WriteLine("Setting Selesai");
+            }
+            catch
+            {
+                throw new InvalidOperationException();
+                //Console.Write
+            }
+        }
+
+        public static void bottomCamera()
+        {
+            try
+            {
+                factoryBawah = new ConnectionFactory();
+                factoryBawah.Uri = "amqp://lumen:lumen@167.205.66.35/%2F";
+                connectionBawah = factoryBawah.CreateConnection();
+                IModel channelBawah = connectionBawah.CreateModel();
+                channelSendBawah = connectionBawah.CreateModel();
+                channelDataBawah = connectionBawah.CreateModel();
+                string routingKey = "avatar.nao1.camera.bottom";
+                var arg = new Dictionary<string, object>
+                {
+                    {"x-message-ttl",50}
+                };
+                QueueDeclareOk queueBawah = channelBawah.QueueDeclare("", false, true, true, arg);
+                channelBawah.QueueBind(queueBawah.QueueName, "amq.topic", routingKey);
+                consumerBawah = new QueueingBasicConsumer(channelBawah);
+                channelBawah.BasicConsume(queueBawah.QueueName, true, consumerBawah);
+                Thread Query = new Thread(QueryImageBawah);
+                Query.Start();
+
+                //QueueDeclareOk queueData = channelData.QueueDeclare("", false, false, true, null);
+                //channelData.QueueBind(queueData.QueueName, "amq.topic", "lumen.visual.get.text");
+                //consumerData = new QueueingBasicConsumer(channelData);
+                //channelData.BasicConsume(queueData.QueueName, true, consumerData);
+                //Thread data = new Thread(QueryData);
+                //data.Start();
+                //Console.WriteLine("Setting Selesai");
             }
             catch
             {
@@ -91,27 +139,14 @@ namespace HumanDetection
         }
         public void dataCollect_textRecognitionReceived(object sender, TextName2 name)
         {
-            //if (state == 1)
-            //{
-            //    Console.WriteLine("Masuk ke state 1");
-            //    if (name.text.ToLower() == "find a book")
-            //    {
-            //        command.NS_tts("" + name.text.ToLower() + "!");
-            //        Thread.Sleep(300);
-            //        state = 2;
-            //        Console.WriteLine("Pindah ke state 2");
-            //        //string objekcari=name.text.Substring(7);
-            //    }
-            //}
 
         }
 
-        private void QueryImage()
+        private static void QueryImage()
         {
             BasicDeliverEventArgs ev = null;
             while (true)
             {
-
                 ev = (BasicDeliverEventArgs)consumer.Queue.Dequeue();
                 Console.WriteLine(ev);
                 lock (global)
@@ -120,7 +155,22 @@ namespace HumanDetection
                 }
             }
         }
-        public Image<Bgr, byte> getImage()
+
+        public static void QueryImageBawah()
+        {
+            BasicDeliverEventArgs evBawah = null;
+            while (true)
+            {
+                evBawah = (BasicDeliverEventArgs)consumerBawah.Queue.Dequeue();
+                Console.WriteLine(evBawah);
+                lock (globalBawah)
+                {
+                    globalBawah = evBawah;
+                }
+            }
+        }
+
+        public Image<Bgr, byte> getImageAtas()
         {
             Image<Bgr, byte> ImageFrame;
             BasicDeliverEventArgs ev;
@@ -161,6 +211,47 @@ namespace HumanDetection
 
         }
 
+        public Image<Bgr, byte> getImageBottom()
+        {
+            Image<Bgr, byte> imageFrameBottom;
+            BasicDeliverEventArgs ev;
+            if(globalBawah != null)
+            {
+                lock (globalBawah)
+                {
+                    ev = globalBawah;
+                }
+                
+                if(ev.Body != null)
+                {
+                    string body = Encoding.UTF8.GetString(ev.Body);
+                    JsonSerializerSettings setting = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Objects };
+                    ImageObject image = JsonConvert.DeserializeObject<ImageObject>(body, setting);
+                    string base64 = image.ContentUrl.Replace("data:image/jpeg;base64,", "");
+                    if(base64 != null)
+                    {
+                        byte[] imageByte = Convert.FromBase64String(base64);
+                        MemoryStream ms = new MemoryStream(imageByte);
+                        Bitmap bmp = (Bitmap)Image.FromStream(ms);
+                        imageFrameBottom = new Image<Bgr, byte>(bmp);
+                        return imageFrameBottom;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         public void connect()
         {
             if (!isConnected)
@@ -175,8 +266,8 @@ namespace HumanDetection
                     channelData = connection.CreateModel();
                     channelAvatar3 = connection.CreateModel();
 
-                    QueueDeclareOk queueData = channelData.QueueDeclare("", true, false, true, null);
-                    QueueDeclareOk queueFaceLocation = channelData.QueueDeclare("", true, false, true, null);
+                    QueueDeclareOk queueData = channelData.QueueDeclare("", false, true, true, null);
+                    QueueDeclareOk queueFaceLocation = channelData.QueueDeclare("", false, true, true, null);
 
                     channelData.QueueBind(queueData.QueueName, "amq.topic", "lumen.visual.get.text");
 
@@ -209,7 +300,8 @@ namespace HumanDetection
                 {
                     isConnected = false;
                     //Program.panel.btn_connect.Text = "Connect";
-                    this.connection.Close();
+                    connection.Close();
+                    connectionBawah.Close();
                 }
                 else
                 {
@@ -235,7 +327,7 @@ namespace HumanDetection
 
         public delegate void TextRecognition_callback(object sender, TextName2 name);
         public event TextRecognition_callback textRecognitionReceived;
-        public void QueryData()
+        public static void QueryData()
         {
             BasicDeliverEventArgs ev = null;
             Console.WriteLine("start data thread");
@@ -246,14 +338,14 @@ namespace HumanDetection
                 Console.WriteLine("data Received");
                 string body = Encoding.UTF8.GetString(ev.Body);
                 JsonSerializerSettings setting = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Objects };
-                textName2 = JsonConvert.DeserializeObject<TextName2>(body, setting);
-                if (textRecognitionReceived != null)
-                {
-                    textRecognitionReceived(this, textName2);
+                //textName2 = JsonConvert.DeserializeObject<TextName2>(body, setting);
+                //if (textRecognitionReceived != null)
+                //{
+                //    textRecognitionReceived(this, textName2);
 
-                    //Console.WriteLine("Data Received {0}", textName2.text2);
+                //    //Console.WriteLine("Data Received {0}", textName2.text2);
 
-                }
+                //}
             }
         }
         public void consumerData_Received(object sender, BasicDeliverEventArgs ev)
@@ -389,8 +481,63 @@ namespace HumanDetection
             string nama = JsonConvert.SerializeObject(recognizedObjects);
             byte[] buffer = Encoding.UTF8.GetBytes(nama);
             channelSend.BasicPublish("amq.topic", routingKey, null, buffer);
-
         }
+
+
+
+
+
+
+        public void labelHOGAtas(List<string> namaBendaAtas, List<Rectangle> recAtas)
+        {
+            string routingKey = "lumen.visual.hogobj.recognition";
+            var recognizedObjects = new RecognizedObjects();
+            recognizedObjects.hasPosition = true;
+            recognizedObjects.hasDistance = false;
+            recognizedObjects.hasYaw = false;
+
+            string ba = "";
+            for (int a = 0; a < recAtas.Count; a++)
+            {
+                boundAtas = recAtas[a];
+                ba = namaBendaAtas[a];
+                var recognizedObject = new RecognizedObject();
+                var lblObj = new RecognizedObject { name = ba, topPosition = new Vector2 { x = boundAtas.Location.X + (boundAtas.Width / 2), y = boundAtas.Location.Y + (boundAtas.Height / 2) } };
+                recognizedObjects.trashes.Add(lblObj);
+            }
+        
+            string nama = JsonConvert.SerializeObject(recognizedObjects);
+            byte[] buffer = Encoding.UTF8.GetBytes(nama);
+            channelSend.BasicPublish("amq.topic", routingKey, null, buffer);
+        }
+
+        public void labelHOGBawah(List<string> namaBendaBawah, List<Rectangle> recBawah)
+        {
+            string routingKey = "lumen.visual.hogobj.recognition";
+            var recognizedObjects = new RecognizedObjects();
+            recognizedObjects.hasPosition = true;
+            recognizedObjects.hasDistance = false;
+            recognizedObjects.hasYaw = false;
+
+            string ba = "";
+            for (int a = 0; a < recBawah.Count; a++)
+            {
+                boundBawah = recBawah[a];
+                ba = namaBendaBawah[a];
+                var recognizedObject = new RecognizedObject();
+                var lblObj = new RecognizedObject { name = ba, bottomPosition = new Vector2 { x = boundBawah.Location.X + (boundBawah.Width / 2), y = boundBawah.Location.Y + (boundBawah.Height / 2) } };
+                recognizedObjects.trashes.Add(lblObj);
+            }
+
+            string nama = JsonConvert.SerializeObject(recognizedObjects);
+            byte[] buffer = Encoding.UTF8.GetBytes(nama);
+            channelSend.BasicPublish("amq.topic", routingKey, null, buffer);
+        }
+
+
+
+
+
         public void stop(String comStop)
         {
             Parameter par = new Parameter();

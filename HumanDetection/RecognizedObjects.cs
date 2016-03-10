@@ -10,9 +10,12 @@ namespace HumanDetection
     {
         [JsonProperty("@type")]
         public String type = "RecognizedObjects"; // Untuk menandai tipe data yang dikirim
-        bool hasPosition = true;
-        bool hasDistance = false;
-        bool hasYaw = false;
+        [JsonProperty("hasPosition")]
+        public bool hasPosition = true;
+        [JsonProperty("hasDistance")]
+        public bool hasDistance = false;
+        [JsonProperty("hasYaw")]
+        public bool hasYaw = false;
         public List<RecognizedObject> trashes = new List<RecognizedObject>();
         public List<RecognizedObject> trashCans = new List<RecognizedObject>();
     }
