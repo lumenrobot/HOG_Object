@@ -68,16 +68,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Emgu.CV">
-      <HintPath>C:\Emgu\emgucv-windows-universal 2.4.10.1940\bin\Emgu.CV.dll</HintPath>
+      <HintPath>..\..\..\Downloads\libemgucv-windows-universal-2.4.10.1940\bin\Emgu.CV.dll</HintPath>
     </Reference>
     <Reference Include="Emgu.CV.GPU">
-      <HintPath>C:\Emgu\emgucv-windows-universal 2.4.10.1940\bin\Emgu.CV.GPU.dll</HintPath>
+      <HintPath>..\..\..\Downloads\libemgucv-windows-universal-2.4.10.1940\bin\Emgu.CV.GPU.dll</HintPath>
     </Reference>
     <Reference Include="Emgu.CV.UI">
-      <HintPath>C:\Emgu\emgucv-windows-universal 2.4.10.1940\bin\Emgu.CV.UI.dll</HintPath>
+      <HintPath>..\..\..\Downloads\libemgucv-windows-universal-2.4.10.1940\bin\Emgu.CV.UI.dll</HintPath>
     </Reference>
     <Reference Include="Emgu.Util">
-      <HintPath>C:\Emgu\emgucv-windows-universal 2.4.10.1940\bin\Emgu.Util.dll</HintPath>
+      <HintPath>..\..\..\Downloads\libemgucv-windows-universal-2.4.10.1940\bin\Emgu.Util.dll</HintPath>
     </Reference>
     <Reference Include="naoqi-dotnet4">
       <HintPath>.\naoqi-dotnet4.dll</HintPath>
