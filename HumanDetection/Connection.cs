@@ -30,7 +30,7 @@ namespace HumanDetection
        
         public static QueueingBasicConsumer consumer, consumerBawah;
         static Stopwatch s = new Stopwatch();
-        static string ip = "167.205.66.76";
+        static string ip = "167.205.66.80";
         //static string ip = "127.0.0.1";
         static int port = 9559;
         public bool isConnected = false;
@@ -68,7 +68,7 @@ namespace HumanDetection
                 IModel channel = connection.CreateModel();
                 channelSend = connection.CreateModel();
                 channelData = connection.CreateModel();
-                string routingKey = "avatar.nao1.camera.main";
+                string routingKey = "avatar.nao1.camera.bottom";
                 var arg = new Dictionary<string, object>
                 {
                     {"x-message-ttl",50}
@@ -134,7 +134,7 @@ namespace HumanDetection
 
         static void bicara()
         {
-            TextToSpeechProxy tts = new TextToSpeechProxy("167.205.66.76", 9559);
+            TextToSpeechProxy tts = new TextToSpeechProxy("167.205.66.80", 9559);
             tts.say("Hallo buddy");
         }
         public void dataCollect_textRecognitionReceived(object sender, TextName2 name)
@@ -148,7 +148,8 @@ namespace HumanDetection
             while (true)
             {
                 ev = (BasicDeliverEventArgs)consumer.Queue.Dequeue();
-                Console.WriteLine(ev);
+                var bodyStr = System.Text.Encoding.UTF8.GetString(ev.Body);
+                Console.WriteLine("QueryImage received {0} {1}", ev.RoutingKey, bodyStr.Substring(0, 200) + "...");
                 lock (global)
                 {
                     global = ev;
@@ -162,7 +163,8 @@ namespace HumanDetection
             while (true)
             {
                 evBawah = (BasicDeliverEventArgs)consumerBawah.Queue.Dequeue();
-                Console.WriteLine(evBawah);
+                var bodyStr = System.Text.Encoding.UTF8.GetString(evBawah.Body);
+                Console.WriteLine("QueryImageBawah received {0} {1}", evBawah.RoutingKey, bodyStr.Substring(0, 200) + "...");
                 lock (globalBawah)
                 {
                     globalBawah = evBawah;
@@ -172,6 +174,7 @@ namespace HumanDetection
 
         public Image<Bgr, byte> getImageAtas()
         {
+            Console.WriteLine("getImageAtas ...");
             Image<Bgr, byte> ImageFrame;
             BasicDeliverEventArgs ev;
             if (global != null)
@@ -457,7 +460,7 @@ namespace HumanDetection
         }
         public void koorHOG(float kX, float kY)
         {
-            string routingKey = "lumen.visual.hogobj.recognition";
+            string routingKey = "lumen.misc.save.birdcalibration";
             var recognizedObjects =  new RecognizedObjects();
             var obj = new RecognizedObject { topPosition = new Vector2 { x = kX, y = kY } };
             recognizedObjects.trashes.Add(obj);

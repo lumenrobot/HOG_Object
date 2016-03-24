@@ -26,17 +26,17 @@ namespace HumanDetection
         private Capture _captureBottom = null;
         float X, Y;
         private bool _captureInProgress;
-        //Connection con;
+        Connection con;
 
         public HumanDet()
         {
             InitializeComponent();
-            //con = new Connection();
+            con = new Connection();
             //try
             //{
                 //timer1.Enabled = true;
-                _capture = new Capture();
-                _capture.ImageGrabbed += ProcessFrame;
+                //_capture = new Capture();
+                //_capture.ImageGrabbed += ProcessFrame;
 
                 //_captureBottom = new Capture();
                 //_captureBottom.ImageGrabbed += prosesFrameBawah;
@@ -49,9 +49,10 @@ namespace HumanDetection
 
         public void ProcessFrame(object sender, EventArgs arg)
         {
+            Console.WriteLine("ProcessFrame(sender,arg)");
             if (_capture != null)
             {
-            Image<Bgr, Byte> frame = _capture.RetrieveBgrFrame().Resize(320, 240, Emgu.CV.CvEnum.INTER.CV_INTER_LINEAR).Copy(); ; //con.getImageAtas().Resize(640, 480, Emgu.CV.CvEnum.INTER.CV_INTER_LINEAR);   
+            Image<Bgr, Byte> frame = /*_capture.RetrieveBgrFrame().Resize(320, 240, Emgu.CV.CvEnum.INTER.CV_INTER_LINEAR).Copy();*/ con.getImageAtas().Resize(640, 480, Emgu.CV.CvEnum.INTER.CV_INTER_LINEAR);   
                 int detected_human = 0;
                 long processingTime;
                 //Rectangle[] results = FindHuman.Find(frame, out processingTime);
@@ -62,7 +63,7 @@ namespace HumanDetection
                 List<string> dataTrain = new List<string>();
 
                 //============================================ DATA1 Cabinet ============================================================
-                string fileCabinet = "D:\\cabinet.txt";//
+                string fileCabinet = "E:\\cabinet.txt";//
                 Size winSizeCabinet = new Size(64, 128);
                 Rectangle[] resultsCabinet = FindHuman.FindObject(frame, out processingTime, winSizeCabinet, fileCabinet);
                 foreach (Rectangle rect in resultsCabinet)
@@ -81,7 +82,7 @@ namespace HumanDetection
                 }
 
                 //============================================ DATA2 Chair =============================================================
-                string fileChair = "D:\\chair.txt";
+                string fileChair = "E:\\chair.txt";
                 Size winSizeChair = new Size(64, 64);
                 Rectangle[] resultsChair = FindHuman.FindObject(frame, out processingTime, winSizeChair, fileChair);
                 foreach (Rectangle rect in resultsChair)
@@ -99,28 +100,28 @@ namespace HumanDetection
                     dataTrain.Add("Chair");
                 }
 
-                //============================================ DATA3 Table =============================================================
-                string fileTable = "D:\\table.txt";
-                Size winSizeTable = new Size(64, 64);
-                Rectangle[] resultsTable = FindHuman.FindObject(frame, out processingTime, winSizeTable, fileTable);
-                foreach (Rectangle rect in resultsTable)
-                {
-                    ++detected_human;
-                    frame.Draw(rect, new Bgr(Color.Red), 2);
-                    Point hogLocation = rect.Location; // Menampilkan lokasi objek
-                    X = hogLocation.X;
-                    Y = hogLocation.Y;
+                ////============================================ DATA3 Table =============================================================
+                //string fileTable = "E:\\table.txt";
+                //Size winSizeTable = new Size(64, 64);
+                //Rectangle[] resultsTable = FindHuman.FindObject(frame, out processingTime, winSizeTable, fileTable);
+                //foreach (Rectangle rect in resultsTable)
+                //{
+                //    ++detected_human;
+                //    frame.Draw(rect, new Bgr(Color.Red), 2);
+                //    Point hogLocation = rect.Location; // Menampilkan lokasi objek
+                //    X = hogLocation.X;
+                //    Y = hogLocation.Y;
 
-                    frame.Draw("[" + detected_human + "]" + "Table", ref f, new Point(rect.Left, rect.Top - 5), new Bgr(Color.Yellow));
-                    //con.koorHOG(X, Y);
-                    Rectangle baru = rect;
-                    dataBound.Add(baru);
-                    dataTrain.Add("Table");
-                }
+                //    frame.Draw("[" + detected_human + "]" + "Table", ref f, new Point(rect.Left, rect.Top - 5), new Bgr(Color.Yellow));
+                //    //con.koorHOG(X, Y);
+                //    Rectangle baru = rect;
+                //    dataBound.Add(baru);
+                //    dataTrain.Add("Table");
+                //}
 
                 
                 ////============================================ DATA4 Arm chair =============================================================
-                string fileArmchair = "D:\\arm chair.txt";
+                string fileArmchair = "E:\\arm chair.txt";
                 Size winSizeArmchair = new Size(64, 64);
                 Rectangle[] resultsArmchair = FindHuman.FindObject(frame, out processingTime, winSizeArmchair, fileArmchair);
                 foreach (Rectangle rect in resultsArmchair)
@@ -139,7 +140,7 @@ namespace HumanDetection
                 }
 
                 ////============================================ DATA5 Bed =============================================================
-                string fileBed = "D:\\bed.txt";
+                string fileBed = "E:\\bed.txt";
                 Size winSizeBed = new Size(128, 64);
                 Rectangle[] resultsBed = FindHuman.FindObject(frame, out processingTime, winSizeBed, fileBed);
                 foreach (Rectangle rect in resultsBed)
@@ -158,7 +159,7 @@ namespace HumanDetection
                 }
 
                 ////============================================ DATA6 Books =============================================================
-                string fileSink = "D:\\sink.txt";
+                string fileSink = "E:\\sink.txt";
                 Size winSizeSink = new Size(64, 128);
                 Rectangle[] resultsSink = FindHuman.FindObject(frame, out processingTime, winSizeSink, fileSink);
                 foreach (Rectangle rect in resultsSink)
@@ -516,6 +517,7 @@ namespace HumanDetection
 
         private void timer1_Tick(object sender, EventArgs e)
         {
+            Console.WriteLine("timer1_Tick");
                 ProcessFrame(this, null);
                 //prosesFrameBawah(this, null);
         }
